@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOAP API Client</title>
+</head>
+<body>
+    <h1>SOAP API Client</h1>
+    <form id="soapForm">
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId" name="userId">
+        <button type="submit">Get User</button>
+    </form>
+    <pre id="response"></pre>
+    
+    <script>
+        document.getElementById('soapForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            const userId = document.getElementById('userId').value;
+            const soapRequest = `
+                <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                                  xmlns:exam="http://www.example.com/">
+                    <soapenv:Header/>
+                    <soapenv:Body>
+                        <exam:GetUser>
+                            <exam:userId>${userId}</exam:userId>
+                        </exam:GetUser>
+                    </soapenv:Body>
+                </soapenv:Envelope>`;
+    
+            fetch('http://localhost:3000/soap', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/xml',
+                    'SOAPAction': 'http://www.example.com/GetUser'
+                },
+                body: soapRequest
+            })
+            .then(response => response.text())
+            .then(text => {
+                // XML'yi parse et
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(text, "text/xml");
+    
+                // JSON yanıtını al
+                const userJson = xmlDoc.getElementsByTagName('tns:user')[0]?.textContent;
+    
+                if (userJson) {
+                    try {
+                        // JSON'u parse et ve formatla
+                        const user = JSON.parse(userJson);
+                        document.getElementById('response').textContent = `ID: ${user.id}\nName: ${user.name}\nEmail: ${user.email}`;
+                    } catch (e) {
+                        document.getElementById('response').textContent = 'Error parsing JSON: ' + e;
+                    }
+                } else {
+                    document.getElementById('response').textContent = 'User not found or error in response';
+                }
+            })
+            .catch(error => {
+                document.getElementById('response').textContent = 'Error: ' + error;
+            });
+        });
+    </script>    
+</body>
+</html>
