@@ -8,3 +8,7 @@ Server should run automatically when starting a workspace. To run manually, run:
 ```sh
 npm run dev
 ```
+# Or
+```sh
+node server.cjs
+```
